@@ -61,7 +61,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
         <div className="col-span-1 lg:col-span-8 glass-panel p-6 rounded-2xl">
           <h3 className="text-white font-bold mb-6">نشاط البلاغات (24 ساعة)</h3>
-          <div className="h-[240px] w-full">
+          {/* Recharts Fix: Added chartWrap class */}
+          <div className="h-[240px] w-full chartWrap">
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={chartData}>
                 <defs>
@@ -85,7 +86,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         <div className="col-span-1 lg:col-span-4 glass-panel p-6 rounded-2xl">
           <h3 className="text-white font-bold mb-6">التوزيع حسب التضاريس</h3>
-          <div className="h-[240px] w-full">
+          {/* Recharts Fix: Added chartWrap class */}
+          <div className="h-[240px] w-full chartWrap">
              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                <BarChart data={terrainData}>
                  <XAxis dataKey="name" stroke="#666" tick={{fill: '#888', fontSize: 10}} />

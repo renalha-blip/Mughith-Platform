@@ -177,11 +177,13 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
            <div className="glass-panel p-6 rounded-2xl">
               <div className="flex items-center gap-2 mb-4 text-red-400">
                 <HeartPulse size={20} />
-                <h3 className="text-lg font-bold text-white">الملف الصحي – صحتي</h3>
+                {/* Fixed: "الملف الصحي" -> "الملف صحتي" */}
+                <h3 className="text-lg font-bold text-white">الملف صحتي – صحتي</h3>
               </div>
               <div className="space-y-4">
                  <div>
-                    <label className="text-xs text-gray-500 block mb-1">مستوى الخطورة الصحي</label>
+                    {/* Fixed: "مستوى الخطورة الصحي" -> "مستوى الخطورة (صحتي)" */}
+                    <label className="text-xs text-gray-500 block mb-1">مستوى الخطورة (صحتي)</label>
                     <p className={`font-bold ${getRiskColor(incident.health_profile.risk_level)}`}>
                        {incident.health_profile.risk_level}
                     </p>

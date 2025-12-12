@@ -147,7 +147,8 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
                           <Activity size={16} className="text-blue-400"/>
                           توزيع حالات البلاغات
                       </h3>
-                      <div className="h-[220px] w-full">
+                      {/* Recharts Fix */}
+                      <div className="h-[220px] w-full chartWrap">
                           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                               <PieChart>
                                   <Pie
@@ -175,7 +176,8 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
                           <Activity size={16} className="text-red-400"/>
                           مستويات الخطورة الصحية
                       </h3>
-                      <div className="h-[220px] w-full">
+                      {/* Recharts Fix */}
+                      <div className="h-[220px] w-full chartWrap">
                           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                               <BarChart data={riskData} layout="vertical">
                                   <XAxis type="number" stroke="#666" tick={{fill: '#888', fontSize: 10}} hide />
@@ -200,7 +202,8 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
                           <Clock size={16} className="text-lime-400"/>
                           زمن الاستجابة (من البلاغ إلى الوصول)
                       </h3>
-                      <div className="h-[200px] w-full">
+                      {/* Recharts Fix */}
+                      <div className="h-[200px] w-full chartWrap">
                           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                               <BarChart data={responseTimeData}>
                                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -218,7 +221,8 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
                           <CloudRain size={16} className="text-blue-400"/>
                           حالات الطقس المؤثرة
                       </h3>
-                      <div className="h-[200px] w-full">
+                      {/* Recharts Fix */}
+                      <div className="h-[200px] w-full chartWrap">
                           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                               <BarChart data={weatherImpact}>
                                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -240,7 +244,8 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
                           توزيع البلاغات حسب المناطق
                       </h3>
                   </div>
-                  <div className="h-[250px] w-full">
+                  {/* Recharts Fix */}
+                  <div className="h-[250px] w-full chartWrap">
                       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                           <BarChart data={incidentsByRegion}>
                               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
