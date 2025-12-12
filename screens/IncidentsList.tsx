@@ -11,9 +11,17 @@ interface IncidentsListProps {
   onDispatchTeams: (incident: Incident) => void;
   onOpenDetails: (incident: Incident) => void;
   onSecurityDispatch?: (incident: Incident) => void;
+  onViewSensors?: (incident: Incident) => void;
 }
 
-const IncidentsList: React.FC<IncidentsListProps> = ({ incidents, onShowOnMap, onDispatchTeams, onOpenDetails, onSecurityDispatch }) => {
+const IncidentsList: React.FC<IncidentsListProps> = ({ 
+  incidents, 
+  onShowOnMap, 
+  onDispatchTeams, 
+  onOpenDetails, 
+  onSecurityDispatch,
+  onViewSensors
+}) => {
   const [filterStatus, setFilterStatus] = useState<string>('الكل');
   const [filterRegion, setFilterRegion] = useState<string>(''); // '' means all
 
@@ -162,6 +170,7 @@ const IncidentsList: React.FC<IncidentsListProps> = ({ incidents, onShowOnMap, o
               onDispatchTeams={onDispatchTeams} 
               onOpenDetails={onOpenDetails}
               onSecurityRouteClick={onSecurityDispatch}
+              onViewSensors={onViewSensors}
             />
         ))}
         {filteredIncidents.length === 0 && (

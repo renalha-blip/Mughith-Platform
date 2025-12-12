@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MapPin, Activity, Wind, BrainCircuit, User, Map, FileText, ShieldAlert, AlertTriangle, AlertCircle, ShieldCheck, Radio, CheckCircle, Skull, CloudRain, HeartPulse, Users } from 'lucide-react';
+import { MapPin, Activity, Wind, BrainCircuit, User, Map, FileText, ShieldAlert, AlertTriangle, AlertCircle, ShieldCheck, Radio, Skull, Users, ArrowUpRight } from 'lucide-react';
 import { Incident } from '../types';
 import { getStatusColor, getRiskColor } from '../utils';
 
@@ -10,9 +10,17 @@ interface IncidentCardProps {
   onDispatchTeams?: (incident: Incident) => void;
   onOpenDetails?: (incident: Incident) => void;
   onSecurityRouteClick?: (incident: Incident) => void;
+  onViewSensors?: (incident: Incident) => void;
 }
 
-const IncidentCard: React.FC<IncidentCardProps> = ({ incident, onShowOnMap, onDispatchTeams, onOpenDetails, onSecurityRouteClick }) => {
+const IncidentCard: React.FC<IncidentCardProps> = ({ 
+  incident, 
+  onShowOnMap, 
+  onDispatchTeams, 
+  onOpenDetails, 
+  onSecurityRouteClick,
+  onViewSensors
+}) => {
 
   const getRiskIcon = (level: string) => {
     switch (level) {
@@ -113,8 +121,8 @@ const IncidentCard: React.FC<IncidentCardProps> = ({ incident, onShowOnMap, onDi
       </div>
 
       {/* AI Insight */}
-      <div className="bg-purple-900/10 border border-purple-500/20 rounded-xl p-3.5">
-        <div className="flex items-center justify-between mb-2">
+      <div className="bg-purple-900/10 border border-purple-500/20 rounded-xl p-3.5 flex flex-col gap-2">
+        <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-purple-400">
                 <BrainCircuit size={14} />
                 <span className="text-xs font-bold">غياث AI – تحليل متقدم</span>
@@ -124,6 +132,18 @@ const IncidentCard: React.FC<IncidentCardProps> = ({ incident, onShowOnMap, onDi
         <p className="text-[10px] text-gray-400 leading-snug line-clamp-2">
             {incident.ai_profile.ghayath_short_line}
         </p>
+        
+        {/* View Sensors Button inside AI Card if available */}
+        {hasSensorAlert && onViewSensors && (
+           <button
+             onClick={(e) => { e.stopPropagation(); onViewSensors(incident); }}
+             className="mt-1 w-full flex items-center justify-center gap-2 bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 rounded-lg py-1.5 text-[10px] font-bold transition-all"
+           >
+             <Radio size={12} className="animate-pulse" />
+             عرض بيانات المستشعرات الحية
+             <ArrowUpRight size={12} />
+           </button>
+        )}
       </div>
 
       {/* Footer Actions */}

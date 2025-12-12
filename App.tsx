@@ -61,6 +61,12 @@ const App: React.FC = () => {
     setIsSecurityModalOpen(true);
   };
 
+  const handleViewSensors = (incident: Incident) => {
+    // Navigate to Sensors screen
+    // Future: Could pass the incident ID to filter the sensor list
+    setActiveScreen('nav_sensors');
+  };
+
   const handleNavigate = (screen: ScreenId) => {
     setActiveScreen(screen);
     // Close sidebar on mobile after navigation
@@ -78,6 +84,7 @@ const App: React.FC = () => {
                   onDispatchTeams={handleDispatchTeams} 
                   onOpenDetails={handleOpenDetails}
                   onSecurityDispatch={handleSecurityDispatch}
+                  onViewSensors={handleViewSensors}
                />;
       case 'nav_incidents':
         return <IncidentsList 
@@ -86,6 +93,7 @@ const App: React.FC = () => {
                   onDispatchTeams={handleDispatchTeams} 
                   onOpenDetails={handleOpenDetails}
                   onSecurityDispatch={handleSecurityDispatch}
+                  onViewSensors={handleViewSensors}
                />;
       case 'nav_map':
         return <MapScreen incidents={incidents} focusedIncidentId={focusedIncidentId} />;
@@ -117,6 +125,7 @@ const App: React.FC = () => {
                 onDispatchTeams={handleDispatchTeams} 
                 onOpenDetails={handleOpenDetails}
                 onSecurityDispatch={handleSecurityDispatch}
+                onViewSensors={handleViewSensors}
             />;
       default:
         return (

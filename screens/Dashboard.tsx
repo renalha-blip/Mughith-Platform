@@ -11,9 +11,17 @@ interface DashboardProps {
   onDispatchTeams: (incident: Incident) => void;
   onOpenDetails: (incident: Incident) => void;
   onSecurityDispatch?: (incident: Incident) => void;
+  onViewSensors?: (incident: Incident) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ incidents, onShowOnMap, onDispatchTeams, onOpenDetails, onSecurityDispatch }) => {
+const Dashboard: React.FC<DashboardProps> = ({ 
+  incidents, 
+  onShowOnMap, 
+  onDispatchTeams, 
+  onOpenDetails, 
+  onSecurityDispatch,
+  onViewSensors
+}) => {
   const chartData = [
     { time: '00:00', value: 2 }, { time: '04:00', value: 1 },
     { time: '08:00', value: 5 }, { time: '12:00', value: 8 },
@@ -108,6 +116,7 @@ const Dashboard: React.FC<DashboardProps> = ({ incidents, onShowOnMap, onDispatc
               onDispatchTeams={onDispatchTeams} 
               onOpenDetails={onOpenDetails}
               onSecurityRouteClick={onSecurityDispatch}
+              onViewSensors={onViewSensors}
             />
           ))}
         </div>
