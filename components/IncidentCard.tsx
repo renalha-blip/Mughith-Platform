@@ -2,7 +2,7 @@
 import React from 'react';
 import { MapPin, Activity, Wind, BrainCircuit, User, Map, FileText, ShieldAlert, AlertTriangle, AlertCircle, ShieldCheck, Radio, Skull, Users, ArrowUpRight } from 'lucide-react';
 import { Incident } from '../types';
-import { getStatusColor, getRiskColor } from '../utils';
+import { getStatusColor, getRiskColor, getPersonCategory } from '../utils';
 
 interface IncidentCardProps {
   incident: Incident;
@@ -32,6 +32,7 @@ const IncidentCard: React.FC<IncidentCardProps> = ({
   };
 
   const hasSensorAlert = incident.ai_profile.sensor_analysis !== undefined;
+  const personCategory = getPersonCategory(incident.age, incident.gender);
 
   return (
     <div 
@@ -61,20 +62,13 @@ const IncidentCard: React.FC<IncidentCardProps> = ({
                         توجيه أمني مفعل
                     </span>
                 )}
-
-                {hasSensorAlert && (
-                   <span className="flex items-center gap-1 text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/30 animate-pulse">
-                      <Radio size={8} />
-                      رصد مستشعر
-                   </span>
-                )}
             </div>
             <h3 className="text-xl font-bold text-white group-hover:text-lime-400 transition-colors truncate leading-tight">
                 {incident.missing_name}
             </h3>
             <div className="flex items-center gap-1.5 text-gray-400 text-xs mt-1">
                 <MapPin size={12} />
-                <span>{incident.city} · منطقة {incident.region}</span>
+                <span>{incident.city} · {incident.region}</span>
             </div>
         </div>
         
@@ -87,22 +81,24 @@ const IncidentCard: React.FC<IncidentCardProps> = ({
         </div>
       </div>
 
-      {/* Demographics & Connections */}
+      {/* Demographics & Connections (Inside Card Only as requested) */}
       <div className="flex flex-col gap-2.5 text-xs text-gray-300 border-y border-white/5 py-4">
           <div className="flex items-center gap-2 mb-1">
-              <User size={14} className="text-blue-400" />
-              <span className="font-medium">{incident.age} سنة • {incident.gender}</span>
+              <User size={14} className={incident.age < 18 ? "text-yellow-400" : "text-blue-400"} />
+              <span className={`font-medium ${incident.age < 18 ? "text-yellow-100" : ""}`}>
+                  {incident.age} سنة • {personCategory}
+              </span>
           </div>
-          {/* Service Connections Badges - Showing inside case context */}
+          {/* Connection Badges */}
           <div className="flex gap-2 flex-wrap">
               {incident.connections.absher && <span className="text-[9px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded border border-green-500/20">أبشر متصل</span>}
               {incident.connections.tawakkalna && <span className="text-[9px] bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded border border-purple-500/20">توكلنا متصل</span>}
               {incident.connections.sehaty && <span className="text-[9px] bg-red-500/10 text-red-400 px-2 py-0.5 rounded border border-red-500/20">صحتي متصل</span>}
-              {incident.connections.ncm && <span className="text-[9px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">الأرصاد متصل</span>}
+              <span className="text-[9px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">الأرصاد (NCM)</span>
           </div>
       </div>
 
-      {/* Grid Stats (Terrain & Weather) */}
+      {/* Grid Stats */}
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-white/5 rounded-xl p-2.5 border border-white/5 flex flex-col justify-center">
             <div className="flex items-center gap-1.5 mb-1">
@@ -125,30 +121,17 @@ const IncidentCard: React.FC<IncidentCardProps> = ({
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-purple-400">
                 <BrainCircuit size={14} />
-                <span className="text-xs font-bold">غياث AI – تحليل متقدم</span>
+                <span className="text-xs font-bold">غياث AI</span>
             </div>
             <span className="text-xs font-mono text-purple-300 font-bold">{incident.ai_profile.ghayath_risk_score}%</span>
         </div>
         <p className="text-[10px] text-gray-400 leading-snug line-clamp-2">
             {incident.ai_profile.ghayath_short_line}
         </p>
-        
-        {/* View Sensors Button inside AI Card if available */}
-        {hasSensorAlert && onViewSensors && (
-           <button
-             onClick={(e) => { e.stopPropagation(); onViewSensors(incident); }}
-             className="mt-1 w-full flex items-center justify-center gap-2 bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 rounded-lg py-1.5 text-[10px] font-bold transition-all"
-           >
-             <Radio size={12} className="animate-pulse" />
-             عرض بيانات المستشعرات الحية
-             <ArrowUpRight size={12} />
-           </button>
-        )}
       </div>
 
-      {/* Footer Actions */}
-      <div className="mt-auto grid grid-cols-2 gap-3">
-        {/* Details */}
+      {/* Footer Actions - Removed Drone/Ground, Kept Security/Map/Details */}
+      <div className="mt-auto grid grid-cols-3 gap-3">
         <button 
             onClick={(e) => { e.stopPropagation(); onOpenDetails && onOpenDetails(incident); }}
             className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-gray-300 border border-white/5 transition-colors"
@@ -157,7 +140,6 @@ const IncidentCard: React.FC<IncidentCardProps> = ({
             التفاصيل
         </button>
 
-        {/* Map */}
         <button 
             onClick={(e) => { e.stopPropagation(); onShowOnMap && onShowOnMap(incident); }}
             className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-xs font-medium text-blue-400 border border-blue-500/20 transition-colors"
@@ -166,20 +148,10 @@ const IncidentCard: React.FC<IncidentCardProps> = ({
             الخريطة
         </button>
         
-        {/* Ground Team */}
-        <button 
-            onClick={(e) => { e.stopPropagation(); onDispatchTeams && onDispatchTeams(incident); }}
-            className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-lime-500/10 hover:bg-lime-500/20 text-xs font-medium text-lime-400 border border-lime-500/20 transition-colors"
-        >
-            <Users size={14} />
-            فريق أرضي
-        </button>
-
-        {/* Security Route */}
         <button 
             onClick={(e) => { e.stopPropagation(); onSecurityRouteClick && onSecurityRouteClick(incident); }}
             className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-400 border border-red-500/20 transition-colors"
-            title="توجيه الحالة للجهات الأمنية (الدفاع المدني / الأمن العام / مراكز الشرطة)"
+            title="توجيه أمني"
         >
             <ShieldAlert size={14} />
             توجيه أمني

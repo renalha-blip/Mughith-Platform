@@ -1,8 +1,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { Incident } from '../types';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, AreaChart, Area, CartesianGrid } from 'recharts';
-import { BarChart2, Filter, FileText, Download, Share2, Printer, Table, Clock, Activity, CloudRain, Map } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, CartesianGrid } from 'recharts';
+import { BarChart2, Filter, FileText, Download, Table, Activity, Clock, Map, Baby } from 'lucide-react';
 import { REGIONS_DATA } from '../constants';
 
 interface ReportsProps {
@@ -38,7 +38,7 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
      return Object.entries(counts).map(([name, count]) => ({ name, count }));
   }, [incidents]);
 
-  // 4. Weather Impact (Bar) - Simulated based on context
+  // 4. Weather Impact (Bar)
   const weatherImpact = useMemo(() => {
       const counts: Record<string, number> = {};
       incidents.forEach(inc => {
@@ -54,6 +54,10 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
       { name: '3-6 ساعات', value: 15 },
       { name: 'أكثر من 6 ساعات', value: 8 },
   ];
+
+  // Child Specific Stats
+  const childIncidents = incidents.filter(i => i.age < 18);
+  const childCritical = childIncidents.filter(i => i.health_profile.risk_level === 'حرج' || i.health_profile.risk_level === 'مرتفع').length;
 
   return (
     <div className="h-full overflow-y-auto custom-scrollbar pb-20 pr-2">
@@ -100,14 +104,6 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
                               {REGIONS_DATA.map(r => <option key={r.region} value={r.region}>{r.region}</option>)}
                           </select>
                       </div>
-                      <div>
-                          <label className="text-xs text-gray-400 block mb-1.5">الفترة الزمنية</label>
-                          <select className="w-full glass-input rounded-lg px-3 py-2 text-sm">
-                              <option>آخر 7 أيام</option>
-                              <option>آخر 30 يوم</option>
-                              <option>هذا العام</option>
-                          </select>
-                      </div>
                       <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-sm font-bold mt-2">
                           تطبيق
                       </button>
@@ -125,13 +121,23 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
                           <p className="text-gray-400 text-xs mb-1">بلاغات قيد البحث</p>
                           <h3 className="text-xl lg:text-2xl font-bold text-yellow-400">{incidents.filter(i => i.status === 'قيد البحث').length}</h3>
                       </div>
+                  </div>
+              </div>
+
+              {/* Minors KPI Box */}
+              <div className="glass-panel p-5 rounded-2xl bg-yellow-900/10 border-yellow-500/20">
+                  <div className="flex items-center gap-2 mb-3 text-yellow-400">
+                      <Baby size={18} />
+                      <h3 className="font-bold text-sm">بلاغات قاصرين (أطفال)</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
                       <div>
-                          <p className="text-gray-400 text-xs mb-1">عالية الخطورة</p>
-                          <h3 className="text-xl lg:text-2xl font-bold text-red-400">{incidents.filter(i => ['حرج', 'مرتفع'].includes(i.health_profile.risk_level)).length}</h3>
+                          <p className="text-gray-400 text--[10px] mb-1">العدد الكلي</p>
+                          <h3 className="text-xl font-bold text-white">{childIncidents.length}</h3>
                       </div>
                       <div>
-                          <p className="text-gray-400 text-xs mb-1">متوسط زمن الاستجابة</p>
-                          <h3 className="text-xl lg:text-2xl font-bold text-green-400">45 دقيقة</h3>
+                          <p className="text-gray-400 text--[10px] mb-1">حالات حرجة</p>
+                          <h3 className="text-xl font-bold text-red-400">{childCritical}</h3>
                       </div>
                   </div>
               </div>
@@ -147,7 +153,6 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
                           <Activity size={16} className="text-blue-400"/>
                           توزيع حالات البلاغات
                       </h3>
-                      {/* Recharts Fix */}
                       <div className="h-[220px] w-full chartWrap">
                           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                               <PieChart>
@@ -176,7 +181,6 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
                           <Activity size={16} className="text-red-400"/>
                           مستويات الخطورة الصحية
                       </h3>
-                      {/* Recharts Fix */}
                       <div className="h-[220px] w-full chartWrap">
                           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                               <BarChart data={riskData} layout="vertical">
@@ -200,9 +204,8 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
                   <div className="glass-panel p-6 rounded-2xl">
                       <h3 className="text-white font-bold mb-6 text-sm flex items-center gap-2">
                           <Clock size={16} className="text-lime-400"/>
-                          زمن الاستجابة (من البلاغ إلى الوصول)
+                          زمن الاستجابة
                       </h3>
-                      {/* Recharts Fix */}
                       <div className="h-[200px] w-full chartWrap">
                           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                               <BarChart data={responseTimeData}>
@@ -218,46 +221,22 @@ const Reports: React.FC<ReportsProps> = ({ incidents }) => {
 
                   <div className="glass-panel p-6 rounded-2xl">
                       <h3 className="text-white font-bold mb-6 text-sm flex items-center gap-2">
-                          <CloudRain size={16} className="text-blue-400"/>
-                          حالات الطقس المؤثرة
+                          <Map size={16} className="text-purple-400"/>
+                          توزيع البلاغات حسب المناطق
                       </h3>
-                      {/* Recharts Fix */}
                       <div className="h-[200px] w-full chartWrap">
                           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                              <BarChart data={weatherImpact}>
+                              <BarChart data={incidentsByRegion}>
                                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                  <XAxis dataKey="name" stroke="#666" tick={{fill: '#888', fontSize: 10}} />
-                                  <YAxis stroke="#666" tick={{fill: '#888', fontSize: 10}} />
-                                  <Tooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{backgroundColor: '#1a1c15', border: '1px solid rgba(255,255,255,0.1)'}} />
-                                  <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={30} />
+                                  <XAxis dataKey="name" stroke="#666" tick={{fill: '#888', fontSize: 11}} />
+                                  <YAxis stroke="#666" tick={{fill: '#888', fontSize: 11}} />
+                                  <Tooltip contentStyle={{backgroundColor: '#1a1c15', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px'}} itemStyle={{color: '#fff'}} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
+                                  <Bar dataKey="count" fill="#a855f7" radius={[4, 4, 0, 0]} barSize={40} />
                               </BarChart>
                           </ResponsiveContainer>
                       </div>
                   </div>
               </div>
-
-              {/* Row 3: Regions (Large) */}
-              <div className="glass-panel p-6 rounded-2xl">
-                  <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-white font-bold text-sm flex items-center gap-2">
-                          <Map size={16} className="text-purple-400"/>
-                          توزيع البلاغات حسب المناطق
-                      </h3>
-                  </div>
-                  {/* Recharts Fix */}
-                  <div className="h-[250px] w-full chartWrap">
-                      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                          <BarChart data={incidentsByRegion}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                              <XAxis dataKey="name" stroke="#666" tick={{fill: '#888', fontSize: 11}} />
-                              <YAxis stroke="#666" tick={{fill: '#888', fontSize: 11}} />
-                              <Tooltip contentStyle={{backgroundColor: '#1a1c15', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px'}} itemStyle={{color: '#fff'}} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
-                              <Bar dataKey="count" fill="#a855f7" radius={[4, 4, 0, 0]} barSize={40} />
-                          </BarChart>
-                      </ResponsiveContainer>
-                  </div>
-              </div>
-
           </div>
       </div>
     </div>

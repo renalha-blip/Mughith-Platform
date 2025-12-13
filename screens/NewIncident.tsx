@@ -13,7 +13,11 @@ interface Companion {
 
 const NewIncident: React.FC = () => {
   const [region, setRegion] = useState('');
+  const [governorate, setGovernorate] = useState('');
+  const [city, setCity] = useState('');
+  const [governorates, setGovernorates] = useState<{name: string, cities: string[]}[]>([]);
   const [cities, setCities] = useState<string[]>([]);
+  
   const [isSameReporter, setIsSameReporter] = useState(false);
   const [missingName, setMissingName] = useState('');
   
@@ -24,13 +28,28 @@ const NewIncident: React.FC = () => {
   const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedRegion = e.target.value;
     setRegion(selectedRegion);
+    setGovernorate('');
+    setCity('');
+    
     const regionData = REGIONS_DATA.find(r => r.region === selectedRegion);
-    setCities(regionData ? regionData.cities : []);
+    setGovernorates(regionData ? regionData.governorates : []);
+    setCities([]);
+  };
+
+  const handleGovernorateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedGov = e.target.value;
+    setGovernorate(selectedGov);
+    setCity('');
+    
+    const govData = governorates.find(g => g.name === selectedGov);
+    setCities(govData ? govData.cities : []);
+  };
+
+  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setCity(e.target.value);
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      // Real-time sanitization logic could be here, but usually better on Blur for UX. 
-      // However, we will set it directly but can enforce truncation on blur.
       setMissingName(e.target.value);
   };
 
@@ -151,6 +170,7 @@ const NewIncident: React.FC = () => {
             </div>
 
             <div className="space-y-4">
+               {/* 1. Region */}
                <div>
                  <label className="block text-xs text-gray-400 mb-1.5">المنطقة</label>
                  <select 
@@ -162,13 +182,35 @@ const NewIncident: React.FC = () => {
                     {REGIONS_DATA.map(r => <option key={r.region} value={r.region}>{r.region}</option>)}
                  </select>
                </div>
+
+               {/* 2. Governorate */}
                <div>
-                 <label className="block text-xs text-gray-400 mb-1.5">المدينة / المحافظة</label>
-                 <select className="w-full px-4 py-2.5 rounded-lg glass-input text-sm" disabled={!region}>
+                 <label className="block text-xs text-gray-400 mb-1.5">المحافظة</label>
+                 <select 
+                    className="w-full px-4 py-2.5 rounded-lg glass-input text-sm" 
+                    value={governorate}
+                    onChange={handleGovernorateChange}
+                    disabled={!region}
+                 >
+                    <option value="">اختر المحافظة</option>
+                    {governorates.map(g => <option key={g.name} value={g.name}>{g.name}</option>)}
+                 </select>
+               </div>
+
+               {/* 3. City */}
+               <div>
+                 <label className="block text-xs text-gray-400 mb-1.5">المدينة</label>
+                 <select 
+                    className="w-full px-4 py-2.5 rounded-lg glass-input text-sm" 
+                    value={city}
+                    onChange={handleCityChange}
+                    disabled={!governorate}
+                 >
                     <option value="">اختر المدينة</option>
                     {cities.map(c => <option key={c} value={c}>{c}</option>)}
                  </select>
                </div>
+
                <div>
                   <label className="block text-xs text-gray-400 mb-1.5">تحديد الموقع التقريبي</label>
                   <div className="w-full h-40 bg-black/40 rounded-xl border border-white/10 relative overflow-hidden group cursor-crosshair">

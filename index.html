@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
@@ -95,7 +96,7 @@
         animation: marker-pulse 2s infinite;
       }
 
-      /* Recharts Fix */
+      /* Recharts Fix: Enforce min sizes to prevent -1px width/height errors */
       .chartWrap {
         min-width: 0;
         min-height: 260px;

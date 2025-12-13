@@ -2,14 +2,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Incident, Team } from '../types';
 import MapComponent from '../components/MapComponent';
-import { Fan, Users, Radio, Activity, Pause, Play, Target, ShieldAlert, CheckCircle, Clock, ShieldCheck, Lock } from 'lucide-react';
+import { Fan, Users, Radio, Activity, Pause, Play, Target, ShieldAlert, Clock, ShieldCheck, Lock, Baby } from 'lucide-react';
+import { getPersonCategory } from '../utils';
 
 interface OperationsProps {
   incidents: Incident[];
   initialSelectedIncidentId?: string | null;
 }
 
-// Mock Teams Generator - Drones included for monitoring only in map layer
 const generateMockTeams = (baseCoords: { lat: number, lng: number }): Team[] => {
     return [
         { id: 'T1', name: 'سرب الدرون الأمني 101', type: 'drone', status: 'standby', coords: { lat: baseCoords.lat + 0.005, lng: baseCoords.lng + 0.005 }, battery: 85 },
@@ -33,33 +33,24 @@ const Operations: React.FC<OperationsProps> = ({ incidents, initialSelectedIncid
       }
   }, [selectedIncident]);
 
-  // Simulation Effect
   useEffect(() => {
     const interval = setInterval(() => {
       setTeams(currentTeams => {
-        // Find ground or rescue teams to toggle
         const eligibleTeams = currentTeams.filter(t => t.type === 'ground' || t.type === 'rescue');
-        
         if (eligibleTeams.length === 0) return currentTeams;
-
-        // Pick a random team
         const randomTeam = eligibleTeams[Math.floor(Math.random() * eligibleTeams.length)];
-
         return currentTeams.map(team => {
           if (team.id === randomTeam.id) {
-            // Toggle between searching and standby
             const newStatus = team.status === 'searching' ? 'standby' : 'searching';
             return { ...team, status: newStatus };
           }
           return team;
         });
       });
-    }, 30000); // 30 seconds
-
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Filter: Ground/Rescue teams are manageable, Drones are only visible on map
   const controlTeams = useMemo(() => teams.filter(t => t.type === 'ground' || t.type === 'rescue'), [teams]);
 
   if (!selectedIncident) return (
@@ -73,13 +64,16 @@ const Operations: React.FC<OperationsProps> = ({ incidents, initialSelectedIncid
     <div className="h-full flex flex-col xl:grid xl:grid-cols-12 gap-6 overflow-y-auto xl:overflow-hidden pb-4">
         {/* Left Panel: Active Incidents List */}
         <div className="order-2 xl:order-1 col-span-12 xl:col-span-4 h-[350px] xl:h-full flex flex-col">
-            <div className="glass-panel p-4 rounded-2xl flex-1 flex flex-col min-h-0">
+            <div className="glass-panel p-4 rounded-2xl flex-1 flex flex-col min-h-0 border border-white/10">
                 <h3 className="text-white font-bold mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
                     <Radio size={20} className="text-lime-500" />
                     البلاغات النشطة
                 </h3>
                 <div className="overflow-y-auto custom-scrollbar space-y-2 flex-1 pr-1">
-                    {incidents.filter(i => i.status !== 'مغلق').map(incident => (
+                    {incidents.filter(i => i.status !== 'مغلق').map(incident => {
+                        const personCategory = getPersonCategory(incident.age, incident.gender);
+                        const isChild = incident.age < 18;
+                        return (
                         <button
                             key={incident.id}
                             onClick={() => setSelectedIncidentId(incident.id)}
@@ -89,14 +83,20 @@ const Operations: React.FC<OperationsProps> = ({ incidents, initialSelectedIncid
                                 : 'bg-white/5 border-white/5 hover:bg-white/10'
                             }`}
                         >
-                            {/* Status Indicator */}
                             <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${incident.status === 'قيد البحث' ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
-                            
                             <div className="flex-1">
                                 <div className="flex justify-between items-start mb-1">
-                                    <span className={`font-bold text-sm ${selectedIncidentId === incident.id ? 'text-white' : 'text-gray-200'}`}>
-                                        {incident.missing_name}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`font-bold text-sm ${selectedIncidentId === incident.id ? 'text-white' : 'text-gray-200'}`}>
+                                            {incident.missing_name}
+                                        </span>
+                                        {isChild && (
+                                            <span className="bg-yellow-500/20 text-yellow-300 text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 border border-yellow-500/30">
+                                                <Baby size={10} />
+                                                {personCategory}
+                                            </span>
+                                        )}
+                                    </div>
                                     <span className="text-[10px] text-gray-500 font-mono">{incident.id.split('-')[2]}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs text-gray-400 mb-2">
@@ -108,7 +108,6 @@ const Operations: React.FC<OperationsProps> = ({ incidents, initialSelectedIncid
                                         {incident.health_profile.risk_level}
                                     </span>
                                 </div>
-                                
                                 {selectedIncidentId === incident.id && (
                                     <div className="flex gap-2 mt-3 animate-in slide-in-from-top-1">
                                         <button className="flex-1 bg-lime-500/10 hover:bg-lime-500/20 text-lime-400 border border-lime-500/20 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1">
@@ -119,30 +118,29 @@ const Operations: React.FC<OperationsProps> = ({ incidents, initialSelectedIncid
                                 )}
                             </div>
                         </button>
-                    ))}
+                    )})}
                 </div>
             </div>
         </div>
 
         {/* Right Panel: Map + Controls */}
-        <div className="order-1 xl:order-2 col-span-12 xl:col-span-8 h-[600px] xl:h-full flex flex-col gap-4">
+        <div className="order-1 xl:order-2 col-span-12 xl:col-span-8 flex flex-col gap-4 min-w-[520px]">
             
-            {/* Top: Map */}
-            <div className="flex-1 glass-panel p-1 rounded-2xl border border-white/10 overflow-hidden relative min-h-[300px]">
+            {/* Top: Map (Enforcing min-height strictness) */}
+            <div className="flex-1 glass-panel p-1 rounded-2xl border border-white/10 overflow-hidden relative min-h-[560px]">
                 <MapComponent 
                     incidents={[selectedIncident]} 
-                    teams={teams} // Pass all teams including drones for map vis
+                    teams={teams}
                     focusedIncidentId={selectedIncident.id}
                     interactive={true}
                     onTeamClick={(team) => {
-                        // Only select control teams
                         if (team.type !== 'drone') setSelectedTeamId(team.id);
                     }}
-                    showHeatmap={true} // Enable AI paths
+                    showHeatmap={true}
                 />
                 
                 {/* Live Feed Overlay */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2 z-[1000]">
+                <div className="absolute top-4 left-4 flex flex-col gap-2 z-[1000] hidden md:flex">
                     <div className="bg-black/80 backdrop-blur border border-white/10 rounded-xl p-3 w-56 shadow-2xl">
                          <div className="flex items-center gap-2 mb-2 text-lime-400 text-xs font-bold border-b border-white/10 pb-2">
                              <Activity size={14} />
@@ -176,7 +174,7 @@ const Operations: React.FC<OperationsProps> = ({ incidents, initialSelectedIncid
 
             {/* Bottom: Controls */}
             <div className="h-auto xl:h-64 grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0">
-                {/* 1. Ground Teams Management (No Drones) */}
+                {/* 1. Ground Teams Management */}
                 <div className="glass-panel p-5 rounded-2xl flex flex-col h-72 md:h-auto">
                      <div className="flex justify-between items-center mb-4">
                          <h3 className="text-white font-bold flex items-center gap-2 text-sm">
@@ -210,16 +208,12 @@ const Operations: React.FC<OperationsProps> = ({ incidents, initialSelectedIncid
                                              </div>
                                          </div>
                                      </div>
-                                     
                                      <button className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
                                          {team.status === 'standby' ? <Play size={12} /> : <Pause size={12} />}
                                      </button>
                                  </div>
                              </div>
                          ))}
-                         {controlTeams.length === 0 && (
-                            <div className="text-center py-4 text-xs text-gray-500">لا توجد فرق أرضية معينة</div>
-                         )}
                      </div>
                 </div>
 

@@ -5,195 +5,261 @@ import {
   TERRAINS, WEATHER_CONTEXTS, DISEASES, REGIONS_DATA, CITY_COORDINATES 
 } from './constants';
 
-const getRandomItem = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+const getRandomItem = <T>(arr: T[] | readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-// --- STRICT 2-PART NAME SYSTEM ---
+// --- A) STRICT PERSON LOGIC ---
 
-// 1. Sanitize Function (Global Rule)
 export const sanitizeName = (name: string): string => {
   if (!name) return "";
   const parts = name.trim().split(/\s+/);
-  // Keep only the first two words
   if (parts.length > 2) {
     return `${parts[0]} ${parts[1]}`;
   }
   return parts.join(" ");
 };
 
-// 2. Strict Name Lists
-const MALE_FIRST_NAMES = [
-  "محمد", "أحمد", "علي", "سعيد", "خالد", "فهد", "عبدالله", "سلطان", "تركي", "نايف", 
-  "سلمان", "عمر", "إبراهيم", "يوسف", "بدر", "ماجد", "فيصل", "سعود", "عبدالعزيز", "مشعل"
+const MALE_NAMES_POOL = [
+  "أحمد محمد", "محمد فهد", "فهد سالم", "خالد حسين", "سلمان أحمد", 
+  "جميل سعيد", "سعود عبدالعزيز", "تركي محمد", "نايف سعد", "مشعل حمد",
+  "عبدالله إبراهيم", "ياسر علي", "عمر سليمان", "بدر عبدالرحمن", "سلطان خالد",
+  "ناصر فهد", "فيصل سعود", "عبدالعزيز محمد", "ماجد عبدالله", "زياد صالح"
 ];
 
-const FEMALE_FIRST_NAMES = [
-  "نورة", "سارة", "فاطمة", "مريم", "ريم", "مها", "جواهر", "العنود", "أمل", "هدى", 
-  "ليلى", "زينب", "عائشة", "منيرة", "حصة", "لطيفة"
+const FEMALE_NAMES_POOL = [
+  "نور فهد", "نورة محمد", "سارة خالد", "ليان سعود", "فاطمة علي",
+  "مريم عبدالله", "لطيفة حمد", "ريم خالد", "حصة صالح", "جواهر عبدالعزيز",
+  "أميرة فهد", "هند سليمان", "العنود نايف", "منى إبراهيم", "دانة سالم",
+  "لولوة سعد", "أروى محمد", "غادة عبدالرحمن", "نوف فهد", "مها عبدالله"
 ];
 
-// Father names must ALWAYS be male names.
-const FATHER_NAMES = MALE_FIRST_NAMES;
+export const getPersonCategory = (age: number, gender: 'ذكر' | 'أنثى') => {
+  if (age < 18) {
+    return gender === 'ذكر' ? 'طفل' : 'طفلة';
+  }
+  return gender;
+};
 
-const MALE_DESCRIPTIONS = [
-  "يرتدي ثوباً أبيض وشماغ أحمر، آخر مشاهدة كانت بالقرب من محطة الوقود.",
-  "يرتدي بدلة رياضية زرقاء، يعاني من النسيان في بعض الأحيان.",
-  "كان يرتدي قميصاً رمادياً وبنطال جينز، يحمل حقيبة ظهر سوداء.",
-  "يرتدي ملابس برية (كاكي)، كان متوجهاً لرعي الأغنام.",
-  "يرتدي ثوباً بنياً، لديه علامة مميزة (جرح قديم) على يده اليمنى.",
-  "شوهد يرتدي معطفاً شتوياً أسود رغم حرارة الجو، يبدو عليه الارتباك.",
-  "يرتدي زي العمل الرسمي (أزرق غامق)، خرج ولم يعد."
-];
+// --- C) TERRAIN ↔ WEATHER LOGIC ---
 
-const FEMALE_DESCRIPTIONS = [
-  "ترتدي عباءة سوداء ونقاب، شوهدت آخر مرة تخرج من المنزل سيرًا على الأقدام.",
-  "ترتدي عباءة ملونة وطرحة بيضاء، تعاني من صعوبة في المشي.",
-  "كانت ترتدي فستاناً منزلياً وعباءة كتف، خرجت للبحث عن الماشية.",
-  "ترتدي عباءة رأس سوداء، تحمل حقيبة يدوية بنية اللون.",
-  "ترتدي عباءة مطرزة، شوهدت بالقرب من السوق الشعبي.",
-  "ترتدي عباءة رمادية، كانت بصحبة طفل صغير قبل أن تفقد."
-];
+const VALID_WEATHER_FOR_TERRAIN: Record<string, string[]> = {
+  "وادي": ["أمطار", "سيول", "أجواء مستقرة", "رياح قوية", "ضباب كثيف"],
+  "صحراء": ["أجواء مستقرة", "عاصفة ترابية", "إجهاد حراري", "رياح قوية", "موجة حر"],
+  "جبال": ["أجواء مستقرة", "رياح قوية", "ضباب كثيف", "أمطار"],
+  "سهل مفتوح": ["أجواء مستقرة", "رياح قوية", "أمطار", "عاصفة ترابية"],
+  "منطقة حضرية": ["أجواء مستقرة", "أمطار", "رياح قوية", "ضباب كثيف"],
+  "طرق برية": ["أجواء مستقرة", "عاصفة ترابية", "رياح قوية", "ضباب كثيف"]
+};
+
+// --- LOGICAL DESCRIPTION GENERATOR ---
+
+const generateLogicalDescription = (
+    gender: 'ذكر' | 'أنثى',
+    age: number,
+    city: string,
+    terrain: string,
+    weather: string,
+    diseases: string[],
+    riskLevel: string,
+    companions: Companion[],
+    hoursAgo: number
+): string => {
+    let parts: string[] = [];
+    parts.push(`آخر مشاهدة قبل ${hoursAgo} ساعة في نطاق ${city} (${terrain}).`);
+
+    const isChild = age < 18;
+    if (gender === 'ذكر') {
+        if (terrain === 'صحراء' || terrain === 'وادي' || terrain === 'طرق برية') {
+             parts.push(isChild ? "يرتدي ملابس رياضية، قد يكون خرج للتنزه." : "يرتدي ثوباً وسترة برية أو ملابس رحلات.");
+        } else {
+             parts.push(isChild ? "يرتدي زي المدرسة، يحمل حقيبة." : "يرتدي ثوباً أبيض وشماغ.");
+        }
+    } else {
+        if (terrain === 'منطقة حضرية') {
+             parts.push(isChild ? "ترتدي فستاناً ملوناً، تحمل لعبة." : "ترتدي عباءة سوداء وحقيبة يد.");
+        } else {
+             parts.push("ترتدي عباءة داكنة وتتواجد في منطقة نائية.");
+        }
+    }
+
+    if (diseases.length > 0 && !diseases.includes("لا يوجد")) {
+        parts.push(`الحالة الصحية: ${diseases.join('، ')} (مستوى الخطورة: ${riskLevel}).`);
+    } else {
+        parts.push("الحالة الصحية: لا يوجد أمراض مزمنة مسجلة.");
+    }
+
+    if (companions.length > 0) {
+        parts.push(`يوجد مرافقون: ${companions.length} (${companions.map(c => c.relation).join('، ')}).`);
+    } else {
+        parts.push("لا توجد مرافقات مسجلة.");
+    }
+
+    return parts.join(" ");
+};
 
 const SENSOR_ANALYSIS_TEXTS = [
   "رصد حركة غير اعتيادية في الوادي الجنوبي.",
   "ارتفاع درجة حرارة الجسم المرصودة حرارياً.",
   "مرور مركبة مشبوهة في نطاق البحث.",
   "تغير مناخي مفاجئ وهبوب رياح قوية.",
-  "انقطاع إشارة الهاتف في منطقة جبلية وعرة."
+  "انقطاع إشارة الهاتف في منطقة وعرة.",
+  "إشارة استغاثة ضعيفة (SOS) ملتقطة."
 ];
 
 // Generate path radiating from center with randomization
-const generateMockPath = (start: GeoCoordinate, segments: number): GeoCoordinate[] => {
+const generateMockPath = (start: GeoCoordinate, segments: number, spread: number = 0.003): GeoCoordinate[] => {
   const path = [start];
   let current = { ...start };
-  const biasLat = (Math.random() - 0.5) * 0.003;
-  const biasLng = (Math.random() - 0.5) * 0.003;
+  // Direction bias
+  const biasLat = (Math.random() - 0.5) * spread;
+  const biasLng = (Math.random() - 0.5) * spread;
 
   for (let i = 0; i < segments; i++) {
-    const latChange = biasLat + (Math.random() - 0.5) * 0.001;
-    const lngChange = biasLng + (Math.random() - 0.5) * 0.001;
+    const latChange = biasLat + (Math.random() - 0.5) * (spread / 3);
+    const lngChange = biasLng + (Math.random() - 0.5) * (spread / 3);
     current = { lat: current.lat + latChange, lng: current.lng + lngChange };
     path.push(current);
   }
   return path;
 };
 
+// --- MAIN GENERATOR ---
+
 export const generateMockIncidents = (count: number): Incident[] => {
   const incidents: Incident[] = [];
   const usedNames = new Set<string>();
-  const usedCoords = new Set<string>(); // Ensure strict unique coords
+  const usedCoords = new Set<string>();
+  
+  const allLocations: {region: string, governorate: string, city: string}[] = [];
+  REGIONS_DATA.forEach(r => {
+      r.governorates.forEach(g => {
+          g.cities.forEach(c => {
+              allLocations.push({ region: r.region, governorate: g.name, city: c });
+          });
+      });
+  });
 
   for (let i = 0; i < count; i++) {
-    const regionObj = getRandomItem(REGIONS_DATA);
-    const city = getRandomItem(regionObj.cities);
+    // 1. Strict Location Binding
+    const loc = getRandomItem(allLocations);
+    const cityData = CITY_COORDINATES.find(c => c.city === loc.city);
+    const baseCoords = cityData ? cityData.coords : { lat: 24.7136, lng: 46.6753 };
     
-    // STRICT CITY BINDING: Fallback only if catastrophic failure in data
-    const cityCoords = CITY_COORDINATES.find(c => c.city === city)?.coords || { lat: 24.7136, lng: 46.6753 };
-    
-    // Improved Jitter: Spread incidents significantly (15-20km) to avoid overlap
-    // Ensure UNIQUE coordinates
     let coords: GeoCoordinate;
     let coordKey: string;
     let coordAttempts = 0;
-    
     do {
         coords = {
-          lat: cityCoords.lat + (Math.random() - 0.5) * 0.35, // Wider spread
-          lng: cityCoords.lng + (Math.random() - 0.5) * 0.35
+          lat: baseCoords.lat + (Math.random() - 0.5) * 0.08,
+          lng: baseCoords.lng + (Math.random() - 0.5) * 0.08
         };
         coordKey = `${coords.lat.toFixed(4)},${coords.lng.toFixed(4)}`;
         coordAttempts++;
     } while (usedCoords.has(coordKey) && coordAttempts < 50);
-    
     usedCoords.add(coordKey);
 
-    // --- STRICT GENDER & NAME GENERATION ---
-    const gender = Math.random() > 0.6 ? 'ذكر' : 'أنثى';
+    // 2. Person
+    const gender = Math.random() > 0.65 ? 'ذكر' : 'أنثى';
     let fullName = "";
-    
-    // Ensure uniqueness while strictly maintaining 2 words
-    let attempts = 0;
+    let nameAttempts = 0;
+    const namePool = gender === 'ذكر' ? MALE_NAMES_POOL : FEMALE_NAMES_POOL;
     do {
-        const firstName = gender === 'ذكر' ? getRandomItem(MALE_FIRST_NAMES) : getRandomItem(FEMALE_FIRST_NAMES);
-        const fatherName = getRandomItem(FATHER_NAMES);
-        
-        // STRICT RULE: Only First + Father Name. No families.
-        fullName = `${firstName} ${fatherName}`;
-        attempts++;
-        // If duplicate, try again. If too many tries, we accept overlap or allow same name different city ideally,
-        // but for this mock, we might just append a number hiddenly if needed, but per strict rules, names are non-unique in real life too.
-        // We will just try to unique it 50 times.
-    } while (usedNames.has(fullName) && attempts < 50);
-    
+        fullName = getRandomItem(namePool);
+        nameAttempts++;
+    } while (usedNames.has(fullName) && nameAttempts < 50);
     usedNames.add(fullName);
 
-    const description = gender === 'ذكر' ? getRandomItem(MALE_DESCRIPTIONS) : getRandomItem(FEMALE_DESCRIPTIONS);
+    const age = getRandomInt(4, 85);
+    const isChild = age < 18;
+    const isElderly = age >= 60;
 
-    // AI Risk Scoring & Logic
-    let riskScore = getRandomInt(40, 70); 
+    // 3. Context
     const terrain = getRandomItem(TERRAINS);
-    const weather = getRandomItem(WEATHER_CONTEXTS);
-    const diseases = [getRandomItem(DISEASES)];
-    
-    let healthRiskLevel = "منخفض";
-    if (diseases.includes("قلب") || diseases.includes("سكري") || diseases.includes("صرع")) {
-        healthRiskLevel = "مرتفع";
-        riskScore += 25;
-    } else if (diseases.includes("لا يوجد")) {
-        healthRiskLevel = "منخفض";
-    } else {
-        healthRiskLevel = "متوسط";
-        riskScore += 10;
+    const validWeatherList = VALID_WEATHER_FOR_TERRAIN[terrain] || ["أجواء مستقرة"];
+    const weather = getRandomItem(validWeatherList);
+
+    // 4. Health
+    let diseases = [getRandomItem(DISEASES)];
+    if (age <= 17) {
+        diseases = diseases.filter(d => !["زهايمر", "ضغط", "قلب"].includes(d)); 
+        if (diseases.length === 0) diseases = ["لا يوجد"];
     }
+    let healthRiskLevel = "منخفض";
+    if (diseases.includes("قلب") || diseases.includes("صرع")) healthRiskLevel = "مرتفع";
+    else if (diseases.includes("لا يوجد")) healthRiskLevel = "منخفض";
+    else healthRiskLevel = "متوسط";
 
-    if (weather === "سيول" || weather === "عاصفة ترابية") riskScore += 20;
-    else if (weather === "أمطار") riskScore += 10;
+    // Survival
+    let survivalHours = 48;
+    if (isChild) survivalHours = 24;
+    else if (isElderly) survivalHours = 30;
+    if (terrain === "وادي" && weather === "سيول") survivalHours -= 18;
+    if (terrain === "صحراء" && weather === "إجهاد حراري") survivalHours -= 16;
+    if (healthRiskLevel === "حرج") survivalHours -= 16;
+    if (survivalHours < 6) survivalHours = 6;
 
-    if (terrain === "جبال" || terrain === "صحراء" || terrain === "وادي") riskScore += 15;
-
+    let riskScore = 100 - survivalHours; 
+    if (healthRiskLevel === 'مرتفع') riskScore += 10;
+    if (weather !== 'أجواء مستقرة') riskScore += 15;
     if (riskScore > 99) riskScore = 99;
     if (riskScore >= 85) healthRiskLevel = "حرج";
+    else if (riskScore >= 60 && healthRiskLevel === "منخفض") healthRiskLevel = "متوسط";
 
-    // Companions
     const hasCompanions = Math.random() > 0.8;
-    const numCompanions = hasCompanions ? getRandomInt(1, 3) : 0;
+    const numCompanions = hasCompanions ? getRandomInt(1, 2) : 0;
     const companions: Companion[] = [];
     for(let j=0; j<numCompanions; j++) {
         companions.push({
-            name: gender === 'ذكر' ? "مرافق" : "مرافقة", // Simplified generic name
-            relation: getRandomItem(["صديق", "أخ", "ابن عم", "سائق", "قريب"]),
+            name: gender === 'ذكر' ? `مرافق ${j+1}` : `مرافقة ${j+1}`,
+            relation: "قريب",
             phone: "05" + getRandomInt(10000000, 99999999)
         });
     }
 
-    // Predictive Paths
-    const numPaths = getRandomInt(2, 4);
+    const hoursAgo = getRandomInt(1, 48);
+    const description = generateLogicalDescription(
+        gender as any, age, loc.city, terrain, weather, diseases, healthRiskLevel, companions, hoursAgo
+    );
+
+    // AI Paths - Generate 3 distinct types for the map layer
     const predictedPaths: PredictedPath[] = [];
-    for(let k=0; k<numPaths; k++) {
-        const confidence = k === 0 ? getRandomInt(75, 95) : getRandomInt(30, 60); 
+    // 1. High Confidence
+    predictedPaths.push({
+        points: generateMockPath(coords, getRandomInt(8, 12), 0.002),
+        confidence: getRandomInt(85, 98),
+        label: "مسار محتمل (أعلى دقة)"
+    });
+    // 2. Medium Confidence
+    if (Math.random() > 0.3) {
         predictedPaths.push({
-            points: generateMockPath(coords, getRandomInt(5, 12)),
-            confidence: confidence,
-            label: k === 0 ? "مسار مرجح" : `مسار محتمل`
+            points: generateMockPath(coords, getRandomInt(6, 10), 0.004),
+            confidence: getRandomInt(50, 80),
+            label: "مسار محتمل (دقة متوسطة)"
+        });
+    }
+    // 3. Low Confidence (Check/Verify)
+    if (Math.random() > 0.5) {
+        predictedPaths.push({
+            points: generateMockPath(coords, getRandomInt(5, 8), 0.006),
+            confidence: getRandomInt(10, 40),
+            label: "مسار مستبعد (تحقق/نفي)"
         });
     }
     predictedPaths.sort((a,b) => b.confidence - a.confidence);
 
-    const hasSensorData = Math.random() < 0.5;
-    const sensorText = hasSensorData ? getRandomItem(SENSOR_ANALYSIS_TEXTS) : undefined;
-
     incidents.push({
       id: `INC-${2024}-${1000 + i}`,
-      missing_name: fullName, // Already sanitized
-      age: getRandomInt(5, 85),
+      missing_name: fullName,
+      age: age,
       gender: gender as 'ذكر' | 'أنثى',
-      region: regionObj.region,
-      city: city,
+      region: loc.region,
+      governorate: loc.governorate,
+      city: loc.city,
       coords,
       terrain_type: terrain as any,
       weather_context: weather as any,
       status: getRandomItem(MOCK_STATUSES) as any,
-      last_seen_hours_ago: getRandomInt(1, 72),
+      last_seen_hours_ago: hoursAgo,
       report_date: new Date().toISOString(),
       source: getRandomItem(MOCK_SOURCES),
       missing_description: description,
@@ -203,20 +269,19 @@ export const generateMockIncidents = (count: number): Incident[] => {
       },
       ai_profile: {
         ghayath_risk_score: riskScore,
-        ghayath_confidence: getRandomInt(60, 99),
-        ghayath_short_line: "تحليل النطاق الجغرافي مكتمل.",
-        ghayath_explanation: `تم تحديد مستوى الخطورة (${healthRiskLevel}) بناءً على ${terrain} ووجود أمراض مزمنة (${diseases.join(',')}).`,
+        ghayath_confidence: getRandomInt(75, 99),
+        ghayath_short_line: isChild ? "حالة قاصر – أولوية قصوى." : (healthRiskLevel === "حرج" ? "مخاطر صحية/بيئية عالية." : "تحليل النطاق الجغرافي مكتمل."),
         predicted_paths: predictedPaths,
-        sensor_analysis: sensorText,
-        survival_estimate: `${getRandomInt(12, 48)} ساعة`,
+        sensor_analysis: Math.random() < 0.3 ? getRandomItem(SENSOR_ANALYSIS_TEXTS) : undefined,
+        survival_estimate: `${Math.round(survivalHours)} ساعة`,
         clustering_group: "Cluster-A"
       },
       companions: companions,
       connections: {
-          absher: Math.random() > 0.1,
-          tawakkalna: Math.random() > 0.1,
-          sehaty: Math.random() > 0.2, // Ensure Sehaty connection
-          ncm: Math.random() > 0.1
+          absher: true,
+          tawakkalna: true,
+          sehaty: diseases.length > 0 && diseases[0] !== "لا يوجد",
+          ncm: true
       },
       is_security_routed: Math.random() > 0.7
     });
@@ -230,16 +295,10 @@ export const generateAssetsForIncident = (incident: Incident) => {
     const teams: Team[] = [];
     const center = incident.coords;
 
-    // 1. Generate spatially linked sensors
+    // Sensors
     const sensorCount = getRandomInt(2, 4);
     for (let i = 0; i < sensorCount; i++) {
         const type = getRandomItem(['thermal', 'motion', 'camera', 'seismic'] as const);
-        const metricMap: any = {
-            'thermal': 'حرارة المكان',
-            'motion': 'حركة الأجسام',
-            'camera': 'مرور المركبات',
-            'seismic': 'تغير مناخي مفاجئ' // Approximate mapping
-        };
         sensors.push({
             id: `SENS-${incident.id.split('-')[2]}-${i}`,
             type: type,
@@ -250,39 +309,47 @@ export const generateAssetsForIncident = (incident: Incident) => {
             },
             battery: getRandomInt(40, 100),
             last_update: 'الآن',
-            location_name: `نطاق ${incident.city}`,
-            reading_value: `${getRandomInt(20, 45)}`,
-            metric_label: metricMap[type]
+            location_name: `${incident.city}`,
+            metric_label: 'قراءة أولية'
         });
     }
 
-    // 2. Generate case-specific teams
-    // Ground team
-    teams.push({
-        id: `GT-${incident.id.split('-')[2]}`,
-        name: `فريق أرضي (${incident.id.split('-')[2]})`,
-        type: 'ground',
-        status: 'searching',
-        coords: {
-            lat: center.lat - 0.003,
-            lng: center.lng + 0.003
-        },
-        assignedIncidentId: incident.id
-    });
+    // Ground Teams (Blue)
+    if (incident.status === 'قيد البحث') {
+        teams.push({
+            id: `GT-${incident.id.split('-')[2]}`,
+            name: `فريق أرضي (${incident.id.split('-')[2]})`,
+            type: 'ground',
+            status: 'searching',
+            coords: { lat: center.lat - 0.003, lng: center.lng + 0.003 },
+            assignedIncidentId: incident.id
+        });
+    }
 
-    // Drone (Monitoring only, on map)
-    teams.push({
-        id: `DR-${incident.id.split('-')[2]}`,
-        name: `درون ${incident.city} - قطاع ${getRandomInt(1,5)}`,
-        type: 'drone',
-        status: 'searching',
-        coords: {
-            lat: center.lat + 0.004,
-            lng: center.lng - 0.002
-        },
-        battery: getRandomInt(50, 90),
-        assignedIncidentId: incident.id
-    });
+    // Volunteers (Purple - Randomly assigned)
+    if (Math.random() > 0.7 && incident.status === 'قيد البحث') {
+        teams.push({
+            id: `VT-${incident.id.split('-')[2]}`,
+            name: `فريق تطوعي (عون)`,
+            type: 'rescue', // Mapped to volunteer
+            status: 'en-route',
+            coords: { lat: center.lat + 0.004, lng: center.lng + 0.004 },
+            assignedIncidentId: incident.id
+        });
+    }
+
+    // Security Drones (Pink - Map Only)
+    if (Math.random() > 0.5) {
+        teams.push({
+            id: `DR-${incident.id.split('-')[2]}`,
+            name: `درون مراقبة`,
+            type: 'drone',
+            status: 'searching',
+            coords: { lat: center.lat + 0.002, lng: center.lng - 0.002 },
+            battery: getRandomInt(50, 90),
+            assignedIncidentId: incident.id
+        });
+    }
 
     return { sensors, teams };
 };
@@ -297,6 +364,7 @@ export const getStatusColor = (status: string) => {
   switch (status) {
     case 'بلاغ جديد': return 'text-red-400 border-red-500/50 bg-red-500/10';
     case 'قيد البحث': return 'text-yellow-400 border-yellow-500/50 bg-yellow-500/10';
+    case 'قيد المتابعة': return 'text-orange-400 border-orange-500/50 bg-orange-500/10';
     case 'تم العثور عليه – حي': return 'text-green-400 border-green-500/50 bg-green-500/10';
     case 'تم العثور عليه – متوفى': return 'text-gray-400 border-gray-500/50 bg-gray-500/10';
     default: return 'text-blue-400 border-blue-500/50 bg-blue-500/10';

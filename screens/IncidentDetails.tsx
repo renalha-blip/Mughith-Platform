@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Incident } from '../types';
 import MapComponent from '../components/MapComponent';
-import { ArrowRight, MapPin, Activity, Wind, BrainCircuit, User, FileText, HeartPulse, AlertTriangle, Users, ChevronDown, Phone, MessageSquare, ShieldAlert, Radio, CheckCircle, CloudRain, Clock, Mountain, Siren, Share2 } from 'lucide-react';
-import { getStatusColor, getRiskColor, formatDate } from '../utils';
+import { ArrowRight, MapPin, Activity, Wind, BrainCircuit, User, HeartPulse, AlertTriangle, Users, ChevronDown, Phone, MessageSquare, ShieldAlert, Radio, CheckCircle, CloudRain, Clock, Mountain, Siren, Share2 } from 'lucide-react';
+import { getStatusColor, getRiskColor, formatDate, getPersonCategory } from '../utils';
 
 interface IncidentDetailsProps {
   incident: Incident;
@@ -14,10 +14,11 @@ interface IncidentDetailsProps {
 const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onSecurityDispatch }) => {
   const [expandedCompanionIndex, setExpandedCompanionIndex] = useState<number | null>(null);
 
-  // Companion Probability Logic
   const companionsProb = incident.companions && incident.companions.length > 0 
       ? Math.min(85, 40 + (incident.companions.length * 15)) 
       : 15;
+
+  const personCategory = getPersonCategory(incident.age, incident.gender);
 
   return (
     <div className="h-full overflow-y-auto custom-scrollbar pr-2 pb-10">
@@ -43,7 +44,7 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
                </div>
                <p className="text-gray-400 text-sm flex items-center gap-1">
                  <MapPin size={14} />
-                 {incident.city} · منطقة {incident.region}
+                 {incident.city} · {incident.region}
                </p>
             </div>
         </div>
@@ -63,7 +64,7 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
         </div>
       </div>
       
-      {/* Header Badges Row - ALL BADGES VISIBLE HERE */}
+      {/* Header Badges */}
       <div className="flex gap-3 mb-6 flex-wrap animate-in slide-in-from-top-2">
          {incident.connections.absher && <span className="text-xs bg-green-500/10 text-green-400 px-3 py-1.5 rounded-lg border border-green-500/20 flex items-center gap-2 font-bold"><CheckCircle size={14}/> أبشر متصل</span>}
          {incident.connections.tawakkalna && <span className="text-xs bg-purple-500/10 text-purple-400 px-3 py-1.5 rounded-lg border border-purple-500/20 flex items-center gap-2 font-bold"><Activity size={14}/> توكلنا متصل</span>}
@@ -77,7 +78,7 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
         {/* Right Column: Info & Map */}
         <div className="col-span-1 lg:col-span-8 space-y-6">
           
-           {/* Missing Person Info Group */}
+           {/* Missing Person Info */}
            <div className="glass-panel p-6 rounded-2xl">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2">
                   <div className="flex items-center gap-2 text-blue-400">
@@ -92,7 +93,9 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
                  </div>
                  <div>
                     <label className="text-xs text-gray-500 block mb-1">العمر</label>
-                    <p className="text-white font-medium">{incident.age} سنة</p>
+                    <p className={`font-medium ${incident.age < 18 ? "text-yellow-400 font-bold" : "text-white"}`}>
+                       {incident.age} سنة – {personCategory}
+                    </p>
                  </div>
                  <div>
                     <label className="text-xs text-gray-500 block mb-1">الجنس</label>
@@ -107,7 +110,7 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
               </div>
            </div>
 
-           {/* Location Group */}
+           {/* Location & Map Group */}
            <div className="glass-panel p-6 rounded-2xl">
               <div className="flex items-center gap-2 mb-4 text-orange-400">
                 <MapPin size={20} />
@@ -117,6 +120,10 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
                  <div>
                     <label className="text-xs text-gray-500 block mb-1">المنطقة</label>
                     <p className="text-white font-medium">{incident.region}</p>
+                 </div>
+                 <div>
+                    <label className="text-xs text-gray-500 block mb-1">المحافظة</label>
+                    <p className="text-white font-medium">{incident.governorate}</p>
                  </div>
                  <div>
                     <label className="text-xs text-gray-500 block mb-1">المدينة</label>
@@ -142,11 +149,8 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
                  </div>
               </div>
               
-              <div className="h-[350px] w-full rounded-xl overflow-hidden border border-white/10 relative">
-                 <MapComponent incidents={[incident]} interactive={false} showHeatmap={true} />
-                 <div className="absolute top-4 right-4 bg-black/80 backdrop-blur px-3 py-1 rounded-full text-xs text-purple-300 border border-purple-500/30 font-bold z-[1000]">
-                    مسارات التنبؤ (غياث AI)
-                 </div>
+              <div className="h-[450px] w-full rounded-xl overflow-hidden border border-white/10 relative">
+                 <MapComponent incidents={[incident]} interactive={true} showHeatmap={true} focusedIncidentId={incident.id} />
               </div>
            </div>
         </div>
@@ -159,7 +163,7 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
                <div className="glass-panel p-6 rounded-2xl bg-teal-900/10 border-teal-500/20">
                    <div className="flex items-center gap-2 mb-4 text-teal-400">
                        <Radio size={20} className="animate-pulse" />
-                       <h3 className="text-lg font-bold text-white">تحليل المستشعرات – غياث AI</h3>
+                       <h3 className="text-lg font-bold text-white">تحليل المستشعرات</h3>
                    </div>
                    <div className="bg-black/30 p-4 rounded-xl border border-white/5 mb-3">
                        <p className="text-sm text-gray-200 leading-relaxed">
@@ -177,13 +181,11 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
            <div className="glass-panel p-6 rounded-2xl">
               <div className="flex items-center gap-2 mb-4 text-red-400">
                 <HeartPulse size={20} />
-                {/* Fixed: "الملف الصحي" -> "الملف صحتي" */}
-                <h3 className="text-lg font-bold text-white">الملف صحتي – صحتي</h3>
+                <h3 className="text-lg font-bold text-white">الملف الصحي (صحتي)</h3>
               </div>
               <div className="space-y-4">
                  <div>
-                    {/* Fixed: "مستوى الخطورة الصحي" -> "مستوى الخطورة (صحتي)" */}
-                    <label className="text-xs text-gray-500 block mb-1">مستوى الخطورة (صحتي)</label>
+                    <label className="text-xs text-gray-500 block mb-1">مستوى الخطورة</label>
                     <p className={`font-bold ${getRiskColor(incident.health_profile.risk_level)}`}>
                        {incident.health_profile.risk_level}
                     </p>
@@ -205,7 +207,7 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
               </div>
            </div>
 
-           {/* AI Analysis (Advanced) */}
+           {/* AI Analysis */}
            <div className="glass-panel p-6 rounded-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/10 rounded-full blur-3xl -z-10"></div>
               
@@ -235,21 +237,6 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
                          </div>
                      </div>
                  )}
-
-                 {/* Cross Analysis */}
-                 <div className="space-y-2">
-                     <label className="text-xs text-gray-500 font-bold block">تحليل التقاطع (صحة × تضاريس × طقس)</label>
-                     <div className="flex flex-wrap gap-2">
-                         <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded flex items-center gap-1">
-                             <HeartPulse size={10} className="text-red-400"/> + <Mountain size={10} className="text-orange-400"/>
-                             = خطر إجهاد عالي
-                         </span>
-                         <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded flex items-center gap-1">
-                             <Wind size={10} className="text-blue-400"/> 
-                             = صعوبة تتبع الأثر
-                         </span>
-                     </div>
-                 </div>
                  
                  <div>
                     <label className="text-xs text-gray-500 block mb-2">رؤية النظام</label>
@@ -260,7 +247,7 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
               </div>
            </div>
 
-           {/* Companions Section */}
+           {/* Companions */}
            <div className="glass-panel p-6 rounded-2xl">
               <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2 text-blue-400">
@@ -272,23 +259,18 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
                   </span>
               </div>
               
-              <div className="mb-4">
-                  <label className="text-xs text-gray-500 block mb-1">هل يوجد مرافقين؟</label>
-                  <p className="text-white font-medium">{incident.companions && incident.companions.length > 0 ? 'نعم' : 'لا'}</p>
-              </div>
-
-              {incident.companions && incident.companions.length > 0 && (
+              {incident.companions && incident.companions.length > 0 ? (
                   <div className="space-y-3">
                      {incident.companions.map((comp, idx) => {
                         const isExpanded = expandedCompanionIndex === idx;
                         return (
-                          <div key={idx} className="bg-white/5 rounded-xl border border-white/5 overflow-hidden transition-all duration-300 hover:bg-white/10 hover:border-white/10">
+                          <div key={idx} className="bg-white/5 rounded-xl border border-white/5 overflow-hidden transition-all duration-300 hover:bg-white/10">
                              <button 
                                 onClick={() => setExpandedCompanionIndex(isExpanded ? null : idx)}
-                                className="w-full flex items-center justify-between p-3 transition-colors"
+                                className="w-full flex items-center justify-between p-3"
                              >
                                 <div className="flex items-center gap-3">
-                                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white text-sm font-bold border border-white/10 shadow-lg">
+                                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white text-sm font-bold border border-white/10">
                                       {comp.name.trim().charAt(0)}
                                    </div>
                                    <div className="text-right">
@@ -301,38 +283,28 @@ const IncidentDetails: React.FC<IncidentDetailsProps> = ({ incident, onBack, onS
                                    className={`text-gray-500 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-blue-400' : ''}`}
                                 />
                              </button>
-                             
-                             <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                                <div className="overflow-hidden">
-                                   <div className="p-3 pt-0 border-t border-white/5 space-y-2 mt-2">
-                                      {comp.phone ? (
-                                          <div className="flex items-center gap-2 text-xs text-gray-300 bg-black/20 p-2 rounded-lg border border-white/5">
-                                             <Phone size={14} className="text-green-400" />
-                                             <span dir="ltr" className="font-mono">{comp.phone}</span>
-                                          </div>
-                                      ) : null}
-                                      {comp.notes && (
-                                          <div className="flex items-start gap-2 text-xs text-gray-300 bg-black/20 p-2 rounded-lg border border-white/5">
-                                             <MessageSquare size={14} className="text-yellow-400 mt-0.5 shrink-0" />
-                                             <span className="leading-relaxed">{comp.notes}</span>
-                                          </div>
-                                      )}
-                                   </div>
+                             {isExpanded && (
+                                <div className="p-3 pt-0 border-t border-white/5 space-y-2 mt-2">
+                                   {comp.phone && (
+                                       <div className="flex items-center gap-2 text-xs text-gray-300 bg-black/20 p-2 rounded-lg border border-white/5">
+                                          <Phone size={14} className="text-green-400" />
+                                          <span dir="ltr" className="font-mono">{comp.phone}</span>
+                                       </div>
+                                   )}
+                                   {comp.notes && (
+                                       <div className="flex items-start gap-2 text-xs text-gray-300 bg-black/20 p-2 rounded-lg border border-white/5">
+                                          <MessageSquare size={14} className="text-yellow-400 mt-0.5 shrink-0" />
+                                          <span className="leading-relaxed">{comp.notes}</span>
+                                       </div>
+                                   )}
                                 </div>
-                             </div>
+                             )}
                           </div>
                         );
                      })}
-                     <div className="mt-4 pt-3 border-t border-white/10">
-                        <div className="flex justify-between items-center text-xs">
-                             <span className="text-gray-400">احتمال زيادة العدد:</span>
-                             <span className="text-yellow-400 font-bold">{companionsProb}%</span>
-                        </div>
-                        <div className="w-full bg-gray-800 h-1.5 rounded-full mt-1">
-                             <div className="bg-yellow-500 h-full rounded-full" style={{width: `${companionsProb}%`}}></div>
-                        </div>
-                     </div>
                   </div>
+               ) : (
+                   <p className="text-sm text-gray-400">لا يوجد مرافقين مسجلين.</p>
                )}
            </div>
 

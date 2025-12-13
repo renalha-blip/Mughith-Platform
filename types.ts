@@ -88,6 +88,7 @@ export interface Incident {
   age: number;
   gender: 'ذكر' | 'أنثى';
   region: string;
+  governorate: string; // Added field
   city: string;
   coords: GeoCoordinate;
   terrain_type: TerrainType;
@@ -111,7 +112,12 @@ export interface CityData {
   coords: GeoCoordinate;
 }
 
+export interface GovernorateData {
+  name: string;
+  cities: string[];
+}
+
 export interface RegionData {
   region: string;
-  cities: string[];
+  governorates: GovernorateData[];
 }
