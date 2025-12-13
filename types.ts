@@ -31,6 +31,10 @@ export interface PredictedPath {
   points: GeoCoordinate[];
   confidence: number;
   label: string;
+  type: 'primary' | 'secondary' | 'tertiary'; // Strict types: Route 1, 2, 3
+  color: string;
+  width: number;
+  timeEstimate: string; // e.g., "15-30 min"
 }
 
 export interface AIProfile {
@@ -39,7 +43,7 @@ export interface AIProfile {
   ghayath_short_line: string;
   ghayath_explanation?: string;
   predicted_paths: PredictedPath[];
-  sensor_analysis?: string; // IoT Sensor analysis text
+  sensor_analysis?: string; 
   survival_estimate?: string;
   clustering_group?: string;
 }
@@ -61,7 +65,7 @@ export interface ConnectionStatus {
 export interface Team {
   id: string;
   name: string;
-  type: 'ground' | 'air' | 'drone' | 'rescue';
+  type: 'ground' | 'air' | 'drone' | 'rescue' | 'volunteer' | 'security';
   status: 'en-route' | 'searching' | 'standby' | 'returning';
   coords: GeoCoordinate;
   assignedIncidentId?: string;
@@ -78,7 +82,7 @@ export interface Sensor {
   last_update: string;
   reading_value?: string;
   location_name?: string;
-  metric_label?: string; // e.g. "حرارة المكان"
+  metric_label?: string;
 }
 
 export interface Incident {
@@ -88,9 +92,10 @@ export interface Incident {
   age: number;
   gender: 'ذكر' | 'أنثى';
   region: string;
-  governorate: string; // Added field
+  governorate: string; 
   city: string;
-  coords: GeoCoordinate;
+  coords: GeoCoordinate; // Last Seen Location
+  cityCoords?: GeoCoordinate; // City Anchor Location
   terrain_type: TerrainType;
   weather_context: WeatherContext;
   status: IncidentStatus;
@@ -105,19 +110,25 @@ export interface Incident {
   companions?: Companion[];
   connections: ConnectionStatus; 
   is_security_routed: boolean;
+  has_volunteer_support?: boolean;
 }
 
 export interface CityData {
   city: string;
-  coords: GeoCoordinate;
+  villages: string[];
 }
 
 export interface GovernorateData {
-  name: string;
-  cities: string[];
+  governorate: string;
+  cities: CityData[];
 }
 
 export interface RegionData {
   region: string;
   governorates: GovernorateData[];
+}
+
+export interface CityCoordinate {
+  city: string;
+  coords: GeoCoordinate;
 }

@@ -15,13 +15,14 @@ const NewIncident: React.FC = () => {
   const [region, setRegion] = useState('');
   const [governorate, setGovernorate] = useState('');
   const [city, setCity] = useState('');
-  const [governorates, setGovernorates] = useState<{name: string, cities: string[]}[]>([]);
-  const [cities, setCities] = useState<string[]>([]);
+  
+  // Derived state for dropdowns
+  const [governoratesList, setGovernoratesList] = useState<{governorate: string, cities: any[]}[]>([]);
+  const [citiesList, setCitiesList] = useState<{city: string}[]>([]);
   
   const [isSameReporter, setIsSameReporter] = useState(false);
   const [missingName, setMissingName] = useState('');
   
-  // Companions State
   const [hasCompanions, setHasCompanions] = useState(false);
   const [companions, setCompanions] = useState<Companion[]>([{ name: '', relation: '', phone: '', notes: '' }]);
 
@@ -32,8 +33,8 @@ const NewIncident: React.FC = () => {
     setCity('');
     
     const regionData = REGIONS_DATA.find(r => r.region === selectedRegion);
-    setGovernorates(regionData ? regionData.governorates : []);
-    setCities([]);
+    setGovernoratesList(regionData ? regionData.governorates : []);
+    setCitiesList([]);
   };
 
   const handleGovernorateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -41,8 +42,8 @@ const NewIncident: React.FC = () => {
     setGovernorate(selectedGov);
     setCity('');
     
-    const govData = governorates.find(g => g.name === selectedGov);
-    setCities(govData ? govData.cities : []);
+    const govData = governoratesList.find(g => g.governorate === selectedGov);
+    setCitiesList(govData ? govData.cities : []);
   };
 
   const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -54,7 +55,6 @@ const NewIncident: React.FC = () => {
   };
 
   const handleNameBlur = () => {
-      // Strict Rule: Truncate to 2 words on blur
       setMissingName(sanitizeName(missingName));
   };
 
@@ -193,7 +193,7 @@ const NewIncident: React.FC = () => {
                     disabled={!region}
                  >
                     <option value="">اختر المحافظة</option>
-                    {governorates.map(g => <option key={g.name} value={g.name}>{g.name}</option>)}
+                    {governoratesList.map(g => <option key={g.governorate} value={g.governorate}>{g.governorate}</option>)}
                  </select>
                </div>
 
@@ -207,7 +207,7 @@ const NewIncident: React.FC = () => {
                     disabled={!governorate}
                  >
                     <option value="">اختر المدينة</option>
-                    {cities.map(c => <option key={c} value={c}>{c}</option>)}
+                    {citiesList.map(c => <option key={c.city} value={c.city}>{c.city}</option>)}
                  </select>
                </div>
 
